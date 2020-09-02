@@ -5,6 +5,7 @@ from .formating import (Collect, ImageToTensor, ToDataContainer, ToTensor,
 from .instaboost import InstaBoost
 from .loading import (LoadAnnotations, LoadImageFromFile, LoadImageFromWebcam,
                       LoadMultiChannelImageFromFiles, LoadProposals)
+from .rotate import Rotate
 from .test_time_aug import MultiScaleFlipAug
 from .transforms import (Albu, CutOut, Expand, MinIoURandomCrop, Normalize,
                          Pad, PhotoMetricDistortion, RandomCenterCropPad,
@@ -17,5 +18,5 @@ __all__ = [
     'MultiScaleFlipAug', 'Resize', 'RandomFlip', 'Pad', 'RandomCrop',
     'Normalize', 'SegRescale', 'MinIoURandomCrop', 'Expand',
     'PhotoMetricDistortion', 'Albu', 'InstaBoost', 'RandomCenterCropPad',
-    'AutoAugment', 'CutOut'
+    'AutoAugment', 'CutOut', 'Rotate'
 ]
