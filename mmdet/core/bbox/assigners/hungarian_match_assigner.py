@@ -71,22 +71,21 @@ class HungarianMatcher(BaseAssigner):
         enclose_rb = torch.max(bbox_pred[:, None, 2:], gt_bboxes[None, :, 2:])
         enclose_wh = (enclose_rb - enclose_lt).clamp(min=0)
         enclose_area = enclose_wh[:, 0] * enclose_wh[:, 1]
-        # enclose_area = torch.max(enclose_area)
         enclose_area = enclose_area.clamp(min=eps)
         gious = ious - (enclose_area - union) / enclose_area
         giou_cost = -gious
         cost = self.cls_wei * cls_cost + self.bbox_wei * bbox_cost
         cost += self.giou_wei * giou_cost
+        # assign all indices to background first
+        assigned_gt_inds[:] = 0
         # do HungarianMatcher on CPU using linear_sum_assignment
         cost = cost.cpu()
-        matched_row_inds, matched_col_inds = linear_sum_assignment(
-            cost)  # ndarray
+        matched_row_inds, matched_col_inds = linear_sum_assignment(cost)
         matched_row_inds = torch.from_numpy(matched_row_inds).to(
             bbox_pred.device)
         matched_col_inds = torch.from_numpy(matched_col_inds).to(
             bbox_pred.divice)
         assigned_gt_inds[matched_row_inds] = matched_col_inds + 1
-        # TODO check need to set assigned_gt_inds 0 for bg?
         assigned_labels[matched_row_inds] = gt_labels[matched_col_inds]
         return AssignResult(
             num_gts, assigned_gt_inds, None, labels=assigned_labels)
