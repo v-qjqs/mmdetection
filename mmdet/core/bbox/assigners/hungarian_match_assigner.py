@@ -14,6 +14,7 @@ class HungarianMatcher(BaseAssigner):
         self.bbox_wei = bbox_wei
         self.giou_wei = giou_wei
 
+    # TODO check torch.no_grad in DETR
     def assign(self,
                bbox_pred,
                cls_pred,
@@ -36,8 +37,9 @@ class HungarianMatcher(BaseAssigner):
         assigned_gt_inds = bbox_pred.new_full((num_bboxes, ),
                                               -1,
                                               dtype=torch.long)
-        assigned_labels = bbox_pred.new_full(
-            (num_bboxes, ) - 1, dtype=torch.long)
+        assigned_labels = bbox_pred.new_full((num_bboxes, ),
+                                             -1,
+                                             dtype=torch.long)
         if num_gts == 0 or num_bboxes == 0:
             # No ground truth or boxes, return empty assignment
             if num_gts == 0:
@@ -50,7 +52,7 @@ class HungarianMatcher(BaseAssigner):
         # Note gt_labels start from index 0.
         cls_cost = -cls_score[:, gt_labels]  # [num_query, num_gt]
         bbox_cost = torch.cdist(
-            bbox_pred, gt_bboxes, p=1)  # [num_query, num_gt]
+            bbox_pred, gt_bboxes, p=1)  # [num_query, num_gt]  # TODO p
         # calculate giou_cost
         lt = torch.max(bbox_pred[:, None, :2], gt_bboxes[None, :, :2])
         rb = torch.min(bbox_pred[:, None, 2:], gt_bboxes[None, :, 2:])
@@ -70,21 +72,21 @@ class HungarianMatcher(BaseAssigner):
         enclose_lt = torch.min(bbox_pred[:, None, :2], gt_bboxes[None, :, :2])
         enclose_rb = torch.max(bbox_pred[:, None, 2:], gt_bboxes[None, :, 2:])
         enclose_wh = (enclose_rb - enclose_lt).clamp(min=0)
-        enclose_area = enclose_wh[:, 0] * enclose_wh[:, 1]
+        enclose_area = enclose_wh[..., 0] * enclose_wh[..., 1]
         enclose_area = enclose_area.clamp(min=eps)
         gious = ious - (enclose_area - union) / enclose_area
         giou_cost = -gious
         cost = self.cls_wei * cls_cost + self.bbox_wei * bbox_cost
-        cost += self.giou_wei * giou_cost
+        cost = cost + self.giou_wei * giou_cost
         # assign all indices to background first
         assigned_gt_inds[:] = 0
         # do HungarianMatcher on CPU using linear_sum_assignment
-        cost = cost.cpu()
+        cost = cost.detach().cpu()  # TODO check detach
         matched_row_inds, matched_col_inds = linear_sum_assignment(cost)
         matched_row_inds = torch.from_numpy(matched_row_inds).to(
             bbox_pred.device)
         matched_col_inds = torch.from_numpy(matched_col_inds).to(
-            bbox_pred.divice)
+            bbox_pred.device)
         assigned_gt_inds[matched_row_inds] = matched_col_inds + 1
         assigned_labels[matched_row_inds] = gt_labels[matched_col_inds]
         return AssignResult(
