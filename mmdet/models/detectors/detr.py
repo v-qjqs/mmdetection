@@ -16,7 +16,6 @@ class DETR(SingleStageDetector):
                  pretrained=None):
         super(DETR, self).__init__(backbone, None, bbox_head, train_cfg,
                                    test_cfg, pretrained)
-        # TODO check extract_feat
 
     def simple_test(self, img, img_metas, rescale=False):
         """Test function without test time augmentation.
@@ -41,13 +40,10 @@ class DETR(SingleStageDetector):
         masks = torch.ones((1, pad_h, pad_w)).to(x.device)
         # for i in range(num_imgs):
         masks[0, :img_h, :img_w] = 0
-        masks = masks.to(x.dtype)  # TODO
+        masks = masks.to(x.dtype)
         outs = self.bbox_head(x, masks)
         bbox_list = self.bbox_head.get_bboxes(
             *outs, img_metas, rescale=rescale)
-        # skip post-processing when exporting to ONNX
-        if torch.onnx.is_in_onnx_export():
-            return bbox_list
 
         bbox_results = [
             bbox2result(det_bboxes, det_labels, self.bbox_head.num_classes)

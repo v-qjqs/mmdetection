@@ -33,9 +33,7 @@ class TransformerHead(AnchorFreeHead):
                 pre_norm=False,
                 return_intermediate_dec=True),
             position_encoding=dict(
-                type='PositionEmbeddingSine',
-                num_pos_feats=128,
-                normalize=True),
+                type='SinePositionEmbedding', num_feats=128, normalize=True),
             loss_cls=dict(
                 type='CrossEntropyLoss',
                 # NOTE bg_cls_weight means relative classification
@@ -61,12 +59,12 @@ class TransformerHead(AnchorFreeHead):
         # background is needed for the matcher.
         assert not use_sigmoid_cls
         assert hasattr(transformer, 'embed_dims') and hasattr(
-            position_encoding, 'num_pos_feats')
-        num_pos_feats = position_encoding['num_pos_feats']
+            position_encoding, 'num_feats')
+        num_feats = position_encoding['num_feats']
         embed_dims = transformer['embed_dims']
-        assert num_pos_feats * 2 == embed_dims, 'embed_dims should' \
-            f' be exactly 2 times of num_pos_feats. Found {embed_dims}' \
-            f' and {num_pos_feats}.'
+        assert num_feats * 2 == embed_dims, 'embed_dims should' \
+            f' be exactly 2 times of num_feats. Found {embed_dims}' \
+            f' and {num_feats}.'
         assert test_cfg is not None and hasattr(test_cfg, 'max_per_img')
         class_weight = loss_cls.get('class_weight', None)
         if class_weight is not None:
