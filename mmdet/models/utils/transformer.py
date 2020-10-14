@@ -158,7 +158,8 @@ class FFN(nn.Module):
         repr_str += f'feedforward_channels={self.feedforward_channels}, '
         repr_str += f'num_fcs={self.num_fcs}, '
         repr_str += f'act_cfg={self.act_cfg}, '
-        repr_str += f'dropout={self.dropout})'
+        repr_str += f'dropout={self.dropout}, '
+        repr_str += f'add_residual={self.add_residual})'
         return repr_str
 
 
