@@ -383,26 +383,58 @@ class TransformerHead(AnchorFreeHead):
             scale_factor = img_metas[img_id]['scale_factor']
             proposals = self._get_bboxes_single(cls_score, bbox_pred,
                                                 img_shape, scale_factor,
-                                                rescale)
+                                                rescale, img_metas[img_id])
             result_list.append(proposals)
         return result_list
+
+    # def _get_bboxes_single(self,
+    #                        cls_score,
+    #                        bbox_pred,
+    #                        img_shape,
+    #                        scale_factor,
+    #                        rescale=False,
+    #                        img_meta=None):
+    #     assert len(cls_score) == len(bbox_pred)
+    #     # exclude background
+    #     scores, det_labels = F.softmax(cls_score, dim=-1)[..., :-1].max(-1)
+    #     det_bboxes = bbox_cxcywh_to_xyxy(bbox_pred)
+    #     det_bboxes[:, 0::2] = det_bboxes[:, 0::2] * img_shape[1]
+    #     det_bboxes[:, 1::2] = det_bboxes[:, 1::2] * img_shape[0]
+    #     # TODO check clip shoud after rescale?
+    #     det_bboxes[:, 0::2].clamp_(min=0, max=img_shape[1])
+    #     det_bboxes[:, 1::2].clamp_(min=0, max=img_shape[0])
+    #     if rescale:
+    #         det_bboxes /= det_bboxes.new_tensor(scale_factor)
+    #     ori_h, ori_w = img_meta['ori_shape'][:2]
+    #     assert torch.all(det_bboxes[:, 0::2] <= ori_w)
+    #     assert torch.all(det_bboxes[:, 1::2] <= ori_h)
+    #     det_bboxes = torch.cat((det_bboxes, scores.unsqueeze(1)), -1)
+    #     return det_bboxes, det_labels
 
     def _get_bboxes_single(self,
                            cls_score,
                            bbox_pred,
                            img_shape,
                            scale_factor,
-                           rescale=False):
+                           rescale=False,
+                           img_meta=None):
         assert len(cls_score) == len(bbox_pred)
         # exclude background
         scores, det_labels = F.softmax(cls_score, dim=-1)[..., :-1].max(-1)
+        assert torch.all(bbox_pred >= 0)
+        assert torch.all(bbox_pred <= 1)
         det_bboxes = bbox_cxcywh_to_xyxy(bbox_pred)
+        # assert torch.all(det_bboxes >= 0)
+        # assert torch.all(det_bboxes <= 1)
         det_bboxes[:, 0::2] = det_bboxes[:, 0::2] * img_shape[1]
         det_bboxes[:, 1::2] = det_bboxes[:, 1::2] * img_shape[0]
-        # TODO check clip shoud after rescale?
-        det_bboxes[:, 0::2].clamp_(min=0, max=img_shape[1])
-        det_bboxes[:, 1::2].clamp_(min=0, max=img_shape[0])
         if rescale:
+            ori_h, ori_w = img_meta['ori_shape'][:2]
             det_bboxes /= det_bboxes.new_tensor(scale_factor)
+            det_bboxes[:, 0::2].clamp_(min=0, max=ori_w)
+            det_bboxes[:, 1::2].clamp_(min=0, max=ori_h)
+
+        # assert torch.all(det_bboxes[:, 0::2] <= ori_w)
+        # assert torch.all(det_bboxes[:, 1::2] <= ori_h)
         det_bboxes = torch.cat((det_bboxes, scores.unsqueeze(1)), -1)
         return det_bboxes, det_labels
