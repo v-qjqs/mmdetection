@@ -117,7 +117,8 @@ class FFN(nn.Module):
                  feedforward_channels,
                  num_fcs=2,
                  act_cfg=dict(type='ReLU', inplace=True),
-                 dropout=0.0):
+                 dropout=0.0,
+                 add_residual=True):
         super(FFN, self).__init__()
         assert num_fcs >= 2, 'num_fcs should be no less ' \
             f'than 2. got {num_fcs}.'
@@ -139,12 +140,15 @@ class FFN(nn.Module):
         layers.append(Linear(feedforward_channels, embed_dims))
         self.layers = nn.Sequential(*layers)
         self.dropout = nn.Dropout(dropout)
+        self.add_residual = add_residual
 
     def forward(self, x, residual=None):
         """Forward function for `FFN`."""
+        x = self.layers(x)
+        if not self.add_residual:
+            return x
         if residual is None:
             residual = x
-        x = self.layers(x)
         return residual + self.dropout(x)
 
     def __repr__(self):

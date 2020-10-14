@@ -195,3 +195,15 @@ def bbox_rescale(bboxes, scale_factor=1.0):
     else:
         rescaled_bboxes = torch.stack([x1, y1, x2, y2], dim=-1)
     return rescaled_bboxes
+
+
+def bbox_cxcywh_to_xyxy(bbox):
+    cx, cy, w, h = bbox.unbind(-1)
+    bbox_new = [(cx - 0.5 * w), (cy - 0.5 * h), (cx + 0.5 * w), (cy + 0.5 * h)]
+    return torch.stack(bbox_new, dim=-1)
+
+
+def bbox_xyxy_to_cxcywh(bbox):
+    x1, y1, x2, y2 = bbox.unbind(-1)
+    bbox_new = [(x1 + x2) / 2, (y1 + y2) / 2, (x2 - x1), (y2 - y1)]
+    return torch.stack(bbox_new, dim=-1)
