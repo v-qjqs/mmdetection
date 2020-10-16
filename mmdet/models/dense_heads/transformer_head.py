@@ -182,6 +182,8 @@ class TransformerHead(AnchorFreeHead):
             res['masks'] = masks
             res['pos_embed'] = pos_embed
             res['outs_dec'] = outs_dec
+            res['all_cls_scores'] = all_cls_scores
+            res['all_bbox_preds'] = all_bbox_preds
             torch.save(res, path)
             print('----------------------++++++++++++++++++++++')
         return all_cls_scores, all_bbox_preds
@@ -383,8 +385,8 @@ class TransformerHead(AnchorFreeHead):
                    img_metas,
                    rescale=False):
         # use the output from the last decoder layer
-        cls_scores = all_cls_scores[-1]
-        bbox_preds = all_bbox_preds[-1]
+        cls_scores = all_cls_scores[0]
+        bbox_preds = all_bbox_preds[0]
         result_list = []
         for img_id in range(len(img_metas)):
             cls_score = cls_scores[img_id]
@@ -396,6 +398,48 @@ class TransformerHead(AnchorFreeHead):
                                                 rescale, img_metas[img_id])
             result_list.append(proposals)
         return result_list
+
+    def _get_bboxes_single(self,
+                           cls_score,
+                           bbox_pred,
+                           img_shape,
+                           scale_factor,
+                           rescale=False,
+                           img_meta=None):
+        assert len(cls_score) == len(bbox_pred)
+        # exclude background
+        scores, det_labels = F.softmax(cls_score, dim=-1)[..., :-1].max(-1)
+        det_bboxes = bbox_cxcywh_to_xyxy(bbox_pred)
+
+        # path = '../detr/d2/tmp_delete_bbox_mmdet.pth'
+        # res = dict()
+        # res['scores'] = scores
+        # res['det_labels'] = det_labels
+        # import copy
+        # res['det_bboxes'] = copy.deepcopy(det_bboxes)
+        # res['cls_score'] = cls_score
+        # res['bbox_pred'] = bbox_pred
+        # img_shape = (800, 1202, 3)
+
+        det_bboxes[:, 0::2] = det_bboxes[:, 0::2] * img_shape[1]
+        det_bboxes[:, 1::2] = det_bboxes[:, 1::2] * img_shape[0]
+        # res['img_shape'] = img_shape
+        # res['det_bboxes_scaled'] = det_bboxes
+        # import os
+        # if not os.path.exists(path):
+        #     torch.save(res, path)
+        #     print('----------save finished -----------------')
+
+        # TODO check clip should after rescale?
+        det_bboxes[:, 0::2].clamp_(min=0, max=img_shape[1])
+        det_bboxes[:, 1::2].clamp_(min=0, max=img_shape[0])
+        if rescale:
+            det_bboxes /= det_bboxes.new_tensor(scale_factor)
+        # ori_h, ori_w = img_meta['ori_shape'][:2]
+        # assert torch.all(det_bboxes[:, 0::2] <= ori_w)
+        # assert torch.all(det_bboxes[:, 1::2] <= ori_h)
+        det_bboxes = torch.cat((det_bboxes, scores.unsqueeze(1)), -1)
+        return det_bboxes, det_labels
 
     # def _get_bboxes_single(self,
     #                        cls_score,
@@ -410,39 +454,13 @@ class TransformerHead(AnchorFreeHead):
     #     det_bboxes = bbox_cxcywh_to_xyxy(bbox_pred)
     #     det_bboxes[:, 0::2] = det_bboxes[:, 0::2] * img_shape[1]
     #     det_bboxes[:, 1::2] = det_bboxes[:, 1::2] * img_shape[0]
-    #     # TODO check clip shoud after rescale?
-    #     det_bboxes[:, 0::2].clamp_(min=0, max=img_shape[1])
-    #     det_bboxes[:, 1::2].clamp_(min=0, max=img_shape[0])
     #     if rescale:
     #         det_bboxes /= det_bboxes.new_tensor(scale_factor)
-    #     ori_h, ori_w = img_meta['ori_shape'][:2]
-    #     assert torch.all(det_bboxes[:, 0::2] <= ori_w)
-    #     assert torch.all(det_bboxes[:, 1::2] <= ori_h)
+    #         ori_h, ori_w = img_meta['ori_shape'][:2]
+    #         det_bboxes[:, 0::2].clamp_(min=0, max=ori_w)
+    #         det_bboxes[:, 1::2].clamp_(min=0, max=ori_h)
+
+    #     # assert torch.all(det_bboxes[:, 0::2] <= ori_w)
+    #     # assert torch.all(det_bboxes[:, 1::2] <= ori_h)
     #     det_bboxes = torch.cat((det_bboxes, scores.unsqueeze(1)), -1)
     #     return det_bboxes, det_labels
-
-    def _get_bboxes_single(self,
-                           cls_score,
-                           bbox_pred,
-                           img_shape,
-                           scale_factor,
-                           rescale=False,
-                           img_meta=None):
-        assert len(cls_score) == len(bbox_pred)
-        # exclude background
-        scores, det_labels = F.softmax(cls_score, dim=-1)[..., :-1].max(-1)
-        assert torch.all(bbox_pred >= 0)
-        assert torch.all(bbox_pred <= 1)
-        det_bboxes = bbox_cxcywh_to_xyxy(bbox_pred)
-        det_bboxes[:, 0::2] = det_bboxes[:, 0::2] * img_shape[1]
-        det_bboxes[:, 1::2] = det_bboxes[:, 1::2] * img_shape[0]
-        if rescale:
-            ori_h, ori_w = img_meta['ori_shape'][:2]
-            det_bboxes /= det_bboxes.new_tensor(scale_factor)
-            det_bboxes[:, 0::2].clamp_(min=0, max=ori_w)
-            det_bboxes[:, 1::2].clamp_(min=0, max=ori_h)
-
-        # assert torch.all(det_bboxes[:, 0::2] <= ori_w)
-        # assert torch.all(det_bboxes[:, 1::2] <= ori_h)
-        det_bboxes = torch.cat((det_bboxes, scores.unsqueeze(1)), -1)
-        return det_bboxes, det_labels

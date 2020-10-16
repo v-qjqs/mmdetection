@@ -144,12 +144,12 @@ class FFN(nn.Module):
 
     def forward(self, x, residual=None):
         """Forward function for `FFN`."""
-        x = self.layers(x)
+        out = self.layers(x)
         if not self.add_residual:
-            return x
+            return out
         if residual is None:
             residual = x
-        return residual + self.dropout(x)
+        return residual + self.dropout(out)
 
     def __repr__(self):
         """str: a string that describes the module"""
@@ -724,6 +724,19 @@ class Transformer(nn.Module):
             target_key_padding_mask=None)
         out_dec = out_dec.transpose(1, 2)
         memory = memory.permute(1, 2, 0).reshape(bs, c, h, w)
+
+        # import os
+        # path = '../detr/d2/transformer_mmdet.pth'
+        # if not os.path.exists(path):
+        #     res = dict()
+        #     res['x'] = x
+        #     res['mask'] = mask
+        #     res['query_embed'] = query_embed
+        #     res['pos_embed'] = pos_embed
+        #     res['memory'] = memory
+        #     res['out_dec'] = out_dec
+        #     torch.save(res, path)
+        #     print('----------------*********************')
         return out_dec, memory
 
     def __repr__(self):
