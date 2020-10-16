@@ -174,6 +174,16 @@ class TransformerHead(AnchorFreeHead):
         all_bbox_preds = [all_bbox_preds[i] for i in range(num_dec_layers)]
         all_cls_scores = [all_cls_scores[-1]] + all_cls_scores[:-1]
         all_bbox_preds = [all_bbox_preds[-1]] + all_bbox_preds[:-1]
+
+        import os
+        path = '../detr/d2/tmp_delete2_mmdet.pth'
+        if not os.path.exists(path):
+            res = dict()
+            res['masks'] = masks
+            res['pos_embed'] = pos_embed
+            res['outs_dec'] = outs_dec
+            torch.save(res, path)
+            print('----------------------++++++++++++++++++++++')
         return all_cls_scores, all_bbox_preds
 
     @force_fp32(apply_to=('all_cls_scores', 'all_bbox_preds'))
@@ -424,8 +434,6 @@ class TransformerHead(AnchorFreeHead):
         assert torch.all(bbox_pred >= 0)
         assert torch.all(bbox_pred <= 1)
         det_bboxes = bbox_cxcywh_to_xyxy(bbox_pred)
-        # assert torch.all(det_bboxes >= 0)
-        # assert torch.all(det_bboxes <= 1)
         det_bboxes[:, 0::2] = det_bboxes[:, 0::2] * img_shape[1]
         det_bboxes[:, 1::2] = det_bboxes[:, 1::2] * img_shape[0]
         if rescale:

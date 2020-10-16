@@ -32,16 +32,29 @@ class DETR(SingleStageDetector):
                 corresponds to each class.
         """
         x = self.extract_feat(img)
+        # assert len(x) == 1
+        # x = x[-1]
+        # pad_h, pad_w, _ = img_metas[0]['pad_shape']
+        # img_h, img_w, _ = img_metas[0]['img_shape']
+
+        path = '/mnt/lustre/liqiaofei/projects/codes/detr/d2/tmp_delete.pth'
+        res = torch.load(path)
+        img = res['samples_tensor']
+        img = img.to(x[-1].device)
+        x = self.extract_feat(img)
         assert len(x) == 1
         x = x[-1]
-        pad_h, pad_w, _ = img_metas[0]['pad_shape']
-        img_h, img_w, _ = img_metas[0]['img_shape']
-        # num_imgs = len(img_metas)
+        pad_h, pad_w = res['img_size'][0]
+        img_h, img_w = pad_h, pad_w
+        # save_res = dict()
+        # save_res['img_size'] = (img_h, img_w)
+        # save_res['feat'] = x
+
         masks = torch.ones((1, pad_h, pad_w)).to(x.device)
-        # for i in range(num_imgs):
         masks[0, :img_h, :img_w] = 0
         masks = masks.to(x.dtype)
         outs = self.bbox_head(x, masks)
+
         bbox_list = self.bbox_head.get_bboxes(
             *outs, img_metas, rescale=rescale)
 
