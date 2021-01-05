@@ -52,7 +52,60 @@ Currently the config files in `cityscapes` use COCO pre-trained weights to initi
 You could download the pre-trained models in advance if network is unavailable or slow, otherwise it would cause errors at the beginning of training.
 
 ## Prepare your own customized model
-The second step is to use your own module or training setting. Assume that we want to implement a new neck module called `AugFPN` to replace with the default `FPN` in the official detector Cascade Mask R-CNN R50.
+The second step is to use your own module or training setting. Assume that we want to implement a new neck called `AugFPN` to replace with the default `FPN` under the existing detector Cascade Mask R-CNN R50. The following implements `AugFPN` a new neck under MMDetection.
+
+
+#### 1. Define a new neck (e.g. AugFPN)
+
+Create a new file `mmdet/models/necks/pafpn.py`.
+
+```python
+from ..builder import NECKS
+
+@NECKS.register_module()
+class PAFPN(nn.Module):
+
+    def __init__(self,
+                in_channels,
+                out_channels,
+                num_outs,
+                start_level=0,
+                end_level=-1,
+                add_extra_convs=False):
+        pass
+
+    def forward(self, inputs):
+        # implementation is ignored
+        pass
+```
+
+#### 2. Import the module
+
+You can either add the following line to `mmdet/models/necks/__init__.py`,
+
+```python
+from .pafpn import PAFPN
+```
+
+or alternatively add
+
+```python
+custom_imports = dict(
+    imports=['mmdet.models.necks.pafpn.py'],
+    allow_failed_imports=False)
+```
+
+to the config file and avoid modifying the original code.
+
+#### 3. Modify the config file
+
+```python
+neck=dict(
+    type='PAFPN',
+    in_channels=[256, 512, 1024, 2048],
+    out_channels=256,
+    num_outs=5)
+```
 
 ## Prepare a config
 
