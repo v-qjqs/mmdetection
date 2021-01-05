@@ -1,6 +1,6 @@
 # 3: Inference and training with customized models and standard datasets
 
-In this note, you will know how to inference, test, and train your own customized models under standard datasets. We use the cityscapes dataset to train a customized Cascade Mask R-CNN model as an example to describe the whole process, which use AugFPN as neck, and rotate or translate as training-time auto augmentation.
+In this note, you will know how to inference, test, and train your own customized models under standard datasets. We use the cityscapes dataset to train a customized Cascade Mask R-CNN R50 model as an example to describe the whole process, which use `AugFPN` to replace defalut `FPN` as neck, and add rotate or translate as training-time auto augmentation.
 
 The basic steps are as below:
 
@@ -52,11 +52,11 @@ Currently the config files in `cityscapes` use COCO pre-trained weights to initi
 You could download the pre-trained models in advance if network is unavailable or slow, otherwise it would cause errors at the beginning of training.
 
 ## Prepare your own customized model
-
+The second step is to use your own module or training setting. Assume that we want to implement a new neck module called `AugFPN` to replace with the default `FPN` in the official detector Cascade Mask R-CNN R50.
 
 ## Prepare a config
 
-The third step is to prepare a config for your own training setting. Assume that we want to use Cascade Mask R-CNN with AugFPN and auto augmentation to train the cityscapes dataset, and assume the config is under directory `configs/cityscapes/` and named as `cascade_mask_rcnn_r50_augfpn_autoaug_10e_cityscapes.py`, the config is as below.
+The third step is to prepare a config for your own training setting. Assume that we want to add AugFPN and auto augmentation to existing Cascade Mask R-CNN R50 to train the cityscapes dataset, and assume the config is under directory `configs/cityscapes/` and named as `cascade_mask_rcnn_r50_augfpn_autoaug_10e_cityscapes.py`, the config is as below.
 
 ```python
 # The new config inherits the base configs to highlight the necessary modification
@@ -186,7 +186,7 @@ data = dict(
 # Set optimizer
 optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
-# Set learning policy
+# Set customized learning policy
 lr_config = dict(
     policy='step',
     warmup='linear',
