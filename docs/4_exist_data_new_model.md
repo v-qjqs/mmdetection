@@ -1,6 +1,6 @@
 # 3: Inference and training with customized models and standard datasets
 
-In this note, you will know how to inference, test, and train your own customized models under standard datasets. We use the cityscapes dataset to train a customized Cascade Mask R-CNN R50 model as an example to describe the whole process, which use `AugFPN` to replace defalut `FPN` as neck, and add rotate or translate as training-time auto augmentation.
+In this note, you will know how to inference, test, and train your own customized models under standard datasets. We use the cityscapes dataset to train a customized Cascade Mask R-CNN R50 model as an example to describe the whole process, which use `AugFPN` to replace defalut `FPN` as neck, and add `Rotate` or `Translate` as training-time auto augmentation.
 
 The basic steps are as below:
 
@@ -111,7 +111,7 @@ For more detailed usages about customize your own models (e.g. implement a new b
 
 ## Prepare a config
 
-The third step is to prepare a config for your own training setting. Assume that we want to add `AugFPN` and `rotate` or `translate` augmentation to existing Cascade Mask R-CNN R50 to train the cityscapes dataset, and assume the config is under directory `configs/cityscapes/` and named as `cascade_mask_rcnn_r50_augfpn_autoaug_10e_cityscapes.py`, the config is as below.
+The third step is to prepare a config for your own training setting. Assume that we want to add `AugFPN` and `Rotate` or `Translate` augmentation to existing Cascade Mask R-CNN R50 to train the cityscapes dataset, and assume the config is under directory `configs/cityscapes/` and named as `cascade_mask_rcnn_r50_augfpn_autoaug_10e_cityscapes.py`, the config is as below.
 
 ```python
 # The new config inherits the base configs to highlight the necessary modification
