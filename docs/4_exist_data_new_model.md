@@ -57,13 +57,13 @@ The second step is to use your own module or training setting. Assume that we wa
 
 #### 1. Define a new neck (e.g. AugFPN)
 
-Create a new file `mmdet/models/necks/pafpn.py`.
+Create a new file `mmdet/models/necks/augfpn.py`.
 
 ```python
 from ..builder import NECKS
 
 @NECKS.register_module()
-class PAFPN(nn.Module):
+class AugFPN(nn.Module):
 
     def __init__(self,
                 in_channels,
@@ -74,7 +74,7 @@ class PAFPN(nn.Module):
                 add_extra_convs=False):
         pass
 
-    def forward(self, inputs):
+    def forward(self, inputs):  # should return a tuple
         # implementation is ignored
         pass
 ```
@@ -84,14 +84,14 @@ class PAFPN(nn.Module):
 You can either add the following line to `mmdet/models/necks/__init__.py`,
 
 ```python
-from .pafpn import PAFPN
+from .augfpn import AugFPN
 ```
 
 or alternatively add
 
 ```python
 custom_imports = dict(
-    imports=['mmdet.models.necks.pafpn.py'],
+    imports=['mmdet.models.necks.augfpn.py'],
     allow_failed_imports=False)
 ```
 
@@ -101,7 +101,7 @@ to the config file and avoid modifying the original code.
 
 ```python
 neck=dict(
-    type='PAFPN',
+    type='AugFPN',
     in_channels=[256, 512, 1024, 2048],
     out_channels=256,
     num_outs=5)
