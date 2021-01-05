@@ -1,4 +1,4 @@
-# 3: Inference and training with customized models and standard datasets
+# 3: Train with customized models and standard datasets
 
 In this note, you will know how to inference, test, and train your own customized models under standard datasets. We use the cityscapes dataset to train a customized Cascade Mask R-CNN R50 model as an example to describe the whole process, which use [`AugFPN`](https://github.com/Gus-Guo/AugFPN) to replace defalut `FPN` as neck, and add `Rotate` or `Translate` as training-time auto augmentation.
 
