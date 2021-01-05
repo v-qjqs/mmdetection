@@ -1,12 +1,13 @@
 # 3: Inference and training with customized models and standard datasets
 
-In this note, you will know how to inference, test, and train your own customized models under standard datasets. We use the cityscapes dataset to train a COCO pretrained Cascade Mask R-CNN model as an example to describe the whole process.
+In this note, you will know how to inference, test, and train your own customized models under standard datasets. We use the cityscapes dataset to train a customized Cascade Mask R-CNN model as an example to describe the whole process, which use AugFPN as neck, and rotate or translate as training-time auto augmentation.
 
 The basic steps are as below:
 
 1. Prepare the standard dataset
-2. Prepare a config
-3. Train, test, inference models on the standard dataset.
+2. Prepare your own customized model
+3. Prepare a config
+4. Train, test, inference models on the standard dataset.
 
 ## Prepare the standard dataset
 
@@ -49,6 +50,9 @@ python tools/convert_datasets/cityscapes.py ./data/cityscapes --nproc 8 --out-di
 
 Currently the config files in `cityscapes` use COCO pre-trained weights to initialize.
 You could download the pre-trained models in advance if network is unavailable or slow, otherwise it would cause errors at the beginning of training.
+
+## Prepare your own customized model
+
 
 ## Prepare a config
 
