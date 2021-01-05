@@ -52,7 +52,7 @@ Currently the config files in `cityscapes` use COCO pre-trained weights to initi
 You could download the pre-trained models in advance if network is unavailable or slow, otherwise it would cause errors at the beginning of training.
 
 ## Prepare your own customized model
-The second step is to use your own module or training setting. Assume that we want to implement a new neck called `AugFPN` to replace with the default `FPN` under the existing detector Cascade Mask R-CNN R50. The following implements `AugFPN` a new neck under MMDetection.
+The second step is to use your own module or training setting. Assume that we want to implement a new neck called `AugFPN` to replace with the default `FPN` under the existing detector Cascade Mask R-CNN R50. The following implements a new neck `AugFPN` under MMDetection.
 
 
 #### 1. Define a new neck (e.g. AugFPN)
@@ -198,7 +198,7 @@ model = dict(
             loss_mask=dict(
                 type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))))
 
-# over-write `train_pipeline` for new added autoaug training setting
+# over-write `train_pipeline` for new added `AutoAugment` training setting
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -250,7 +250,7 @@ lr_config = dict(
     step=[8])
 total_epochs = 10
 
-# We can use the COCO pretrained Cascade Mask R-CNN model for more stable performance initialization
+# We can use the COCO pretrained Cascade Mask R-CNN R50 model for more stable performance initialization
 load_from = 'http://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth'
 ```
 
